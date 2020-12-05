@@ -68,6 +68,10 @@ def harvest(plant_id):
 @app.route('/plant/<plant_id>')
 def detail(plant_id):
     """Display the plant detail page & process data from the harvest form."""
+
+    if not ObjectId.is_valid(plant_id) or not plants.find_one({'_id': ObjectId(plant_id)}):
+        return render_template('error.html')
+
     plant_to_show = plants.find_one({'_id': ObjectId(plant_id)})
     harvest_list = harvests.find({'plant_id': plant_id})
     context = {
@@ -106,6 +110,10 @@ def delete(plant_id):
     """Delete plants."""
     plants.delete_one({'_id': ObjectId(plant_id)})
     harvests.delete_many({'plant_id': plant_id})
+    return redirect(url_for('plants_list'))
+
+@app.errorhandler(404)
+def error(e):
     return redirect(url_for('plants_list'))
 
 if __name__ == '__main__':
