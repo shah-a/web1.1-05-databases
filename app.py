@@ -26,8 +26,7 @@ harvests = mongo.db.harvests
 @app.route('/')
 def plants_list():
     """Display the plants list page."""
-    context = {'plants': plants.find()}
-    return render_template('plants_list.html', **context)
+    return render_template('plants_list.html', plants=plants.find())
 
 @app.route('/about')
 def about():
@@ -40,7 +39,7 @@ def create():
 
     if request.method == 'GET':
         return render_template('create.html')
-    # else:  # if method == 'POST':
+    # else:  # if request.method == 'POST':
     new_plant = {
         'name': request.form.get('plant_name'),
         'variety': request.form.get('variety'),
@@ -80,32 +79,33 @@ def detail(plant_id):
 @app.route('/edit/<plant_id>', methods=['GET', 'POST'])
 def edit(plant_id):
     """Shows the edit page and accepts a POST request with edited data."""
-    if request.method == 'POST':
-        # TODO: Make an `update_one` database call to update the plant with the
-        # given id. Make sure to put the updated fields in the `$set` object.
 
-        
-        return redirect(url_for('detail', plant_id=plant_id))
-    else:
-        # TODO: Make a `find_one` database call to get the plant object with the
-        # passed-in _id.
-        plant_to_show = ''
+    if request.method == 'GET':
+        plant_to_show = plants.find_one({'_id': ObjectId(plant_id)})
+        return render_template('edit.html', plant=plant_to_show)
+    # else:  # if request.method == 'POST':
+    plant_filter = {
+        '_id': ObjectId(plant_id)
+    }
 
-        context = {
-            'plant': plant_to_show
+    plant_update = {
+        '$set': {
+            'name': request.form.get('plant_name'),
+            'variety': request.form.get('variety'),
+            'photo_url': request.form.get('photo'),
+            'date_planted': request.form.get('date_planted')
         }
+    }
 
-        return render_template('edit.html', **context)
+    plants.update_one(plant_filter, plant_update)
+
+    return redirect(url_for('detail', plant_id=plant_id))
 
 @app.route('/delete/<plant_id>', methods=['POST'])
 def delete(plant_id):
     """Delete plants."""
-    # TODO: Make a `delete_one` database call to delete the plant with the given
-    # id.
-
-    # TODO: Also, make a `delete_many` database call to delete all harvests with
-    # the given plant id.
-
+    plants.delete_one({'_id': ObjectId(plant_id)})
+    harvests.delete_many({'plant_id': plant_id})
     return redirect(url_for('plants_list'))
 
 if __name__ == '__main__':
