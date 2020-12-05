@@ -69,7 +69,7 @@ def harvest(plant_id):
 def detail(plant_id):
     """Display the plant detail page & process data from the harvest form."""
     plant_to_show = plants.find_one({'_id': ObjectId(plant_id)})
-    harvest_list = harvests.find()
+    harvest_list = harvests.find({'plant_id': plant_id})
     context = {
         'plant' : plant_to_show,
         'harvests': harvest_list
